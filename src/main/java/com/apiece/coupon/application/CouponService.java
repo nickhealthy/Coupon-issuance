@@ -27,9 +27,10 @@ public class CouponService {
         return couponRepository.save(coupon);
     }
 
+    // SELECT ... FOR UPDATE coupon 행을 락해 재고 차감과 1인 1매 검사를 직렬화한다.
     @Transactional
     public Issuance issue(Long couponId, Long userId) {
-        Coupon coupon = couponRepository.findById(couponId)
+        Coupon coupon = couponRepository.findByIdForUpdate(couponId)
                 .orElseThrow(CouponNotFoundException::new);
 
         LocalDateTime now = LocalDateTime.now();
