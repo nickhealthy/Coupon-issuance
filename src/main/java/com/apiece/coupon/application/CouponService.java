@@ -48,7 +48,6 @@ public class CouponService {
 
         couponIssuer.tryIssue(couponId);
         couponRepository.incrementIssuedQuantity(couponId);
-        coupon.setIssuedQuantity(coupon.getIssuedQuantity() + 1);
 
         return issuanceRepository.save(Issuance.create(coupon, userId, now));
     }

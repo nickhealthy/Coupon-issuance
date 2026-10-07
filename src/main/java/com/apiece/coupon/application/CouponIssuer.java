@@ -13,7 +13,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CouponIssuer {
     private final StringRedisTemplate redisTemplate;
-    private final RedisScript<Long> script = RedisScript.of(new ClassPathResource("coupon-issuer.lua"), Long.class);
+    private final RedisScript<Long> script = RedisScript.of(
+            new ClassPathResource("lua/issue.lua"),
+            Long.class
+    );
 
     public void tryIssue(Long couponId) {
         Long raw = redisTemplate.execute(
