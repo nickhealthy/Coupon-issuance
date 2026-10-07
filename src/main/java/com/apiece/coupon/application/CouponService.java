@@ -20,21 +20,22 @@ import java.time.LocalDateTime;
 public class CouponService {
     private final CouponRepository couponRepository;
     private final IssuanceRepository issuanceRepository;
+    private final CouponIssuer couponIssuer;
 
     @Transactional
     public Coupon createCoupon(CreateCouponRequest request) {
-        Coupon coupon = Coupon.create(request);
-        return couponRepository.save(coupon);
+        Coupon coupon = couponRepository.save(Coupon.create(request));
+        couponIssuer.initStock(coupon.getId(), coupon.getTotalQuantity());
+        return coupon;
     }
 
-    // SELECT ... FOR UPDATE coupon 행을 락해 재고 차감과 1인 1매 검사를 직렬화한다.
+
     @Transactional
     public Issuance issue(Long couponId, Long userId) {
-        Coupon coupon = couponRepository.findByIdForUpdate(couponId)
+        Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(CouponNotFoundException::new);
 
         LocalDateTime now = LocalDateTime.now();
-
         if (!coupon.isBookingOpen(now)) {
             throw new NotStartedException();
         }
@@ -45,6 +46,8 @@ public class CouponService {
             throw new AlreadyIssuedException();
         }
 
+        couponIssuer.tryIssue(couponId);
+        couponRepository.incrementIssuedQuantity(couponId);
         coupon.setIssuedQuantity(coupon.getIssuedQuantity() + 1);
 
         return issuanceRepository.save(Issuance.create(coupon, userId, now));

@@ -15,17 +15,35 @@ services:
       interval: 10s
       timeout: 3s
       retries: 20
+  redis:
+    image: redis:8.0
+    container_name: coupon-redis
+    command: ["redis-server", "--appendonly", "yes"] # 영속성 유지 옵션
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
   coupon-service:
     image: coupon-servie:latest
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/coupon?useSSL=false
       SPRING_DATASOURCE_USERNAME: coupon
       SPRING_DATASOURCE_PASSWORD: coupon
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
     ports:
       - "8080:8080"
 
 volumes:
   mysql-data:
+  redis_data:

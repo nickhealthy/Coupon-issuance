@@ -1,15 +1,13 @@
 package com.apiece.coupon.domain;
 
-import jakarta.persistence.LockModeType;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-
-import java.util.Optional;
 
 public interface CouponRepository extends JpaRepository<Coupon, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT c FROM Coupon c WHERE c.id = :couponId")
-    Optional<Coupon> findByIdForUpdate(Long couponId);
+    @Modifying
+    @Query("UPDATE Coupon c SET c.issuedQuantity = c.issuedQuantity + 1 WHERE c.id = :id")
+    int incrementIssuedQuantity(@Param("id") Long id);
 }
